@@ -1,6 +1,5 @@
 import sys
-import os
-from tabulate import tabulate  # Import the tabulate library
+from tabulate import tabulate
 
 # Data Structure for the Parse Tree
 class ParseTreeNode:
@@ -13,9 +12,7 @@ class ParseTreeNode:
             for child in self.children:
                 child.parent = self
 
-# ---------------------------------------------------------------------------
 # The Shift-Reduce Parser Class
-# ---------------------------------------------------------------------------
 class ShiftReduceParser:
     """
     A class that encapsulates the entire Shift-Reduce parsing process.
@@ -75,7 +72,6 @@ class ShiftReduceParser:
             for lhs, rhs_list in self.grammar.items():
                 for rhs_tuple in rhs_list:
                     print(f"{lhs} -> {' '.join(rhs_tuple) or 'ε'}")
-            print("-" * 30)
             
         except FileNotFoundError:
             print(f"Error: Grammar file '{filename}' not found.")
@@ -191,7 +187,7 @@ class ShiftReduceParser:
                 break # End of parse
         
         # After the loop, display the results
-        self.display_results(status, tree)
+        self._display_results(status, tree)
 
     def _print_tree_recursive(self, node, prefix):
         """Internal recursive helper for printing the tree."""
@@ -206,9 +202,9 @@ class ShiftReduceParser:
             child_prefix = "    " if is_last else "│   "
             self._print_tree_recursive(child, prefix + child_prefix)
 
-    def print_parse_tree(self, root_node):
+    def _print_parse_tree(self, root_node):
         """Prints the final parse tree in a structured format."""
-        print("\n--- 4. Parse Tree ---")
+        print("\n--- Parse Tree ---")
         if not root_node:
             print("No parse tree generated.")
             return
@@ -216,10 +212,10 @@ class ShiftReduceParser:
         print(f"└── {repr(root_node.value)}")
         self._print_tree_recursive(root_node, "    ")
 
-    def display_results(self, status, parse_tree):
+    def _display_results(self, status, parse_tree):
         """Prints the final parsing table, result, and parse tree."""
         # Print Table using tabulate
-        print("\n--- 2. Shift-Reduce Parsing Table ---")
+        print("\n--- Shift-Reduce Parsing Table ---")
         if not self.parsing_table_rows:
             print("No parsing steps were taken.")
         else:
@@ -227,29 +223,50 @@ class ShiftReduceParser:
             print(tabulate(self.parsing_table_rows, headers=headers, tablefmt="grid"))
 
         # Print Final Result
-        print("\n--- 3. Final Result ---")
+        print("\n--- Final Result ---")
         print(f"Parsing Status: {status}")
 
         # Print Parse Tree
-        self.print_parse_tree(parse_tree)
+        self._print_parse_tree(parse_tree)
 
-# ---------------------------------------------------------------------------
 # Main Execution
-# ---------------------------------------------------------------------------
 def main():
-    """Main function to create and run the parser."""
-    grammar_filename = "grammar.txt"
+    if len(sys.argv) != 2:
+        print("No grammer file provided.")
+        print("\nExample usage: python code.py path/to/grammer/file")
+        
+        example_grammer = "\nnexample of grammer in a file: \n\n"
+        example_grammer += "S -> A B\n"
+        example_grammer += "A -> a | e\n"
+        example_grammer += "B -> b\n\n"
+        example_grammer += "rules: 1. you must use '->' to separate the non-terminal on the left from its productions on the right.\n"
+        example_grammer += "       2. You must put a space ' ' between every symbol in a production.\n"
+        example_grammer += "       3. You must use the '|' symbol to separate multiple productions for the same non-terminal.\n"
+        example_grammer += "       4. The non-terminal on the first valid grammar line in the file is automatically set as the start symbol.\n"
+        
+        print(example_grammer)
+        return
     
     # 1. Instantiate the parser with the grammar file
-    parser = ShiftReduceParser(grammar_filename)
-    
-    # 2. Get user input
-    print("NOTE: Please enter your string with spaces between tokens.")
-    print("Example: id * id + id")
-    input_str = input("Enter input string: ")
-    
-    # 3. Run the parsing process (which will also display results)
-    parser.parse(input_str)
+    parser = ShiftReduceParser(sys.argv[1])
+
+    # 2. Parse an input string
+    try:
+        rules = "\n--- Enter input string for parser ---\n"
+        rules += "rules: 1. You must put a space ' ' between every individual token\n"
+        rules += "       2. You do not need to add the '$' to your string. The program adds this for you automatically.\n"
+        rules += "       3. Enter 'exit' to quit the program"
+        print(rules)
+        
+        input_str = input("input string: ")
+        while input_str.lower() != "exit":
+            parser.parse(input_str)
+            print("")
+            print("-" * 35)
+            input_str = input("\ninput string: ")
+
+    except EOFError:
+        print("\nNo input provided. Exiting.")
 
 if __name__ == "__main__":
     main()
