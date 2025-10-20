@@ -105,8 +105,7 @@ class ShiftReduceParser:
 
     def parse(self, input_string):
         """
-        Parses a given input string according to the loaded grammar.
-        Returns the final status and the root of the parse tree.
+        Parses a given input string, then prints all results.
         """
         # 1. Reset state for the new run
         self.input_buffer = input_string.strip().split() + ['$']
@@ -114,6 +113,10 @@ class ShiftReduceParser:
         self.node_stack = []
         self.parsing_table_rows = []
         step = 1
+        
+        # Variables to hold the final result
+        status = "Unknown"
+        tree = None
 
         while True:
             stack_str = " ".join(self.parsing_stack)
@@ -144,12 +147,15 @@ class ShiftReduceParser:
                     if stack_str == f"$ {self.start_symbol}" and input_str == "$":
                         current_row[3] = "Accept"
                         self.parsing_table_rows.append(current_row)
-                        # Return the single node left on the stack
-                        return "Accepted", self.node_stack[0]
+                        status = "Accepted"
+                        tree = self.node_stack[0]
+                        break # End of parse
                     else:
                         current_row[3] = "Reject (Error)"
                         self.parsing_table_rows.append(current_row)
-                        return "Rejected (Invalid State)", None
+                        status = "Rejected (Invalid State)"
+                        tree = None
+                        break # End of parse
             else:
                 # Policy: Prefer the longest possible reduction
                 max_len = max(len(rhs) for _, rhs in potential_reductions)
@@ -159,7 +165,9 @@ class ShiftReduceParser:
                     rules = ", ".join([f"{l}->{' '.join(r)}" for l, r in longest_reductions])
                     current_row[3:5] = ["Reduce-Reduce Conflict", f"Rules: [{rules}]"]
                     self.parsing_table_rows.append(current_row)
-                    return "Rejected (Conflict)", None
+                    status = "Rejected (Conflict)"
+                    tree = None
+                    break # End of parse
 
                 # Perform the reduction
                 lhs, rhs_symbols = longest_reductions[0]
@@ -178,7 +186,12 @@ class ShiftReduceParser:
             if step > 100: # Safety break
                 current_row[3:5] = ["Reject (Loop Limit)", "Over 100 steps"]
                 self.parsing_table_rows.append(current_row)
-                return "Rejected (Loop Limit)", None
+                status = "Rejected (Loop Limit)"
+                tree = None
+                break # End of parse
+        
+        # After the loop, display the results
+        self.display_results(status, tree)
 
     def _print_tree_recursive(self, node, prefix):
         """Internal recursive helper for printing the tree."""
@@ -186,20 +199,11 @@ class ShiftReduceParser:
         num_children = len(children)
         
         for i, child in enumerate(children):
-            # Check if this is the last child
             is_last = (i == num_children - 1)
-            
-            # Connector for this child
             connector = "└── " if is_last else "├── "
-            
-            # Print the child's line. Use repr() to keep quotes around terminals
             print(f"{prefix}{connector}{repr(child.value)}")
             
-            # Calculate the prefix for its children
-            # If last child, prefix is blank. If not, it's a vertical bar.
             child_prefix = "    " if is_last else "│   "
-            
-            # Recurse
             self._print_tree_recursive(child, prefix + child_prefix)
 
     def print_parse_tree(self, root_node):
@@ -209,11 +213,7 @@ class ShiftReduceParser:
             print("No parse tree generated.")
             return
         
-        # Print the root node
-        # We use repr() to be consistent and show 'E' instead of E
         print(f"└── {repr(root_node.value)}")
-        
-        # Start the recursion for its children with an empty prefix
         self._print_tree_recursive(root_node, "    ")
 
     def display_results(self, status, parse_tree):
@@ -230,7 +230,7 @@ class ShiftReduceParser:
         print("\n--- 3. Final Result ---")
         print(f"Parsing Status: {status}")
 
-        # Print Parse Tree (UPDATED)
+        # Print Parse Tree
         self.print_parse_tree(parse_tree)
 
 # ---------------------------------------------------------------------------
@@ -248,11 +248,8 @@ def main():
     print("Example: id * id + id")
     input_str = input("Enter input string: ")
     
-    # 3. Run the parsing process
-    status, tree = parser.parse(input_str)
-    
-    # 4. Display all results
-    parser.display_results(status, tree)
+    # 3. Run the parsing process (which will also display results)
+    parser.parse(input_str)
 
 if __name__ == "__main__":
     main()
