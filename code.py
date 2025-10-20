@@ -13,13 +13,6 @@ class ParseTreeNode:
             for child in self.children:
                 child.parent = self
 
-    def __repr__(self, level=0):
-        """String representation to print the tree."""
-        ret = "  " * level + repr(self.value) + "\n"
-        for child in self.children:
-            ret += child.__repr__(level + 1)
-        return ret
-
 # ---------------------------------------------------------------------------
 # The Shift-Reduce Parser Class
 # ---------------------------------------------------------------------------
@@ -151,6 +144,7 @@ class ShiftReduceParser:
                     if stack_str == f"$ {self.start_symbol}" and input_str == "$":
                         current_row[3] = "Accept"
                         self.parsing_table_rows.append(current_row)
+                        # Return the single node left on the stack
                         return "Accepted", self.node_stack[0]
                     else:
                         current_row[3] = "Reject (Error)"
@@ -186,6 +180,42 @@ class ShiftReduceParser:
                 self.parsing_table_rows.append(current_row)
                 return "Rejected (Loop Limit)", None
 
+    def _print_tree_recursive(self, node, prefix):
+        """Internal recursive helper for printing the tree."""
+        children = node.children
+        num_children = len(children)
+        
+        for i, child in enumerate(children):
+            # Check if this is the last child
+            is_last = (i == num_children - 1)
+            
+            # Connector for this child
+            connector = "└── " if is_last else "├── "
+            
+            # Print the child's line. Use repr() to keep quotes around terminals
+            print(f"{prefix}{connector}{repr(child.value)}")
+            
+            # Calculate the prefix for its children
+            # If last child, prefix is blank. If not, it's a vertical bar.
+            child_prefix = "    " if is_last else "│   "
+            
+            # Recurse
+            self._print_tree_recursive(child, prefix + child_prefix)
+
+    def print_parse_tree(self, root_node):
+        """Prints the final parse tree in a structured format."""
+        print("\n--- 4. Parse Tree ---")
+        if not root_node:
+            print("No parse tree generated.")
+            return
+        
+        # Print the root node
+        # We use repr() to be consistent and show 'E' instead of E
+        print(f"└── {repr(root_node.value)}")
+        
+        # Start the recursion for its children with an empty prefix
+        self._print_tree_recursive(root_node, "    ")
+
     def display_results(self, status, parse_tree):
         """Prints the final parsing table, result, and parse tree."""
         # Print Table using tabulate
@@ -194,19 +224,14 @@ class ShiftReduceParser:
             print("No parsing steps were taken.")
         else:
             headers = ['Step', 'Stack', 'Input String', 'Action', 'Associative Rule']
-            # Use tabulate to format the output
             print(tabulate(self.parsing_table_rows, headers=headers, tablefmt="grid"))
 
         # Print Final Result
         print("\n--- 3. Final Result ---")
         print(f"Parsing Status: {status}")
 
-        # Print Parse Tree
-        print("\n--- 4. Parse Tree (Leaves to Root) ---")
-        if parse_tree:
-            print(parse_tree)
-        else:
-            print("No parse tree generated.")
+        # Print Parse Tree (UPDATED)
+        self.print_parse_tree(parse_tree)
 
 # ---------------------------------------------------------------------------
 # Main Execution
