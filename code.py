@@ -197,7 +197,7 @@ class ShiftReduceParser:
         for i, child in enumerate(children):
             is_last = (i == num_children - 1)
             connector = "└── " if is_last else "├── "
-            print(f"{prefix}{connector}{repr(child.value)}")
+            print(f"{prefix}{connector}{child.value}")
             
             child_prefix = "    " if is_last else "│   "
             self._print_tree_recursive(child, prefix + child_prefix)
@@ -209,7 +209,7 @@ class ShiftReduceParser:
             print("No parse tree generated.")
             return
         
-        print(f"└── {repr(root_node.value)}")
+        print(f"└── {root_node.value}")
         self._print_tree_recursive(root_node, "    ")
 
     def _display_results(self, status, parse_tree):
