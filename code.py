@@ -214,14 +214,6 @@ class ShiftReduceParser:
 def main():
     """Main function to create and run the parser."""
     grammar_filename = "grammar.txt"
-    grammar_content = """
-    # Unambiguous Expression Grammar
-    E -> E + T | T
-    T -> T * F | F
-    F -> ( E ) | id
-    """
-    with open(grammar_filename, "w") as f:
-        f.write(grammar_content)
     
     # 1. Instantiate the parser with the grammar file
     parser = ShiftReduceParser(grammar_filename)
@@ -236,9 +228,6 @@ def main():
     
     # 4. Display all results
     parser.display_results(status, tree)
-    
-    # 5. Clean up the sample file
-    os.remove(grammar_filename)
 
 if __name__ == "__main__":
     main()
