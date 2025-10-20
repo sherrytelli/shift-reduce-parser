@@ -172,7 +172,6 @@ class ShiftReduceParser:
 
                 if can_shift: # Shift-Reduce Conflict (resolved by reducing)
                     action = "Reduce (S/R Conflict)"
-                    rule_str += " (Prefer Reduce)"
                 
                 current_row[3:5] = [action, rule_str]
                 self.parsing_table_rows.append(current_row)
